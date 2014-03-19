@@ -1,5 +1,6 @@
 import importlib
 import threading
+import inspect
 import time
 
 
@@ -81,7 +82,13 @@ def _init_object(attrs):
     assert len(path) >= 2, "Required package.class"
     module_name = ".".join(path[:-1])
     cls = getattr(importlib.import_module(module_name), path[-1])
-    obj = cls(**attrs)
+
+    if inspect.isclass(cls):
+        obj = cls(**attrs)
+    else:
+        # Wrap non-class objects like a function to lambdas
+        obj = ( lambda: cls(**attrs) )
+
     return obj
 
 def _format_name(name):
