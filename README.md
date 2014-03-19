@@ -20,13 +20,14 @@ import meters
 import meters.scales.shared
 
 meters.configure({
-        "common": {
-            "prefix": "servers.{uname[1]}.{env[USER]}",
-        },
-
         "placeholders": {
             "env":   "os.environ",
-            "uname": "platform.uname",
+            "uname": "meters.shortcuts.get_node",
+            "app":   "meters.shortcuts.get_app",
+        },
+
+        "common": {
+            "prefix": "servers.{uname}.{env[USER]}.{app}",
         },
 
         "handlers": {
