@@ -30,14 +30,10 @@ def add_handler(handler):
 
 def configure(config):
     for handler_attrs in config.get("handlers", {}).values():
-        handler_attrs = dict(handler_attrs)
-        handler_class = _get_class(handler_attrs.pop("class"))
-        add_handler(handler_class(**handler_attrs))
+        add_handler(_init_object(handler_attrs))
 
     for (meter_name, meter_attrs) in config.get("meters", {}).items():
-        meter_attrs = dict(meter_attrs)
-        meter_class = _get_class(meter_attrs.pop("class"))
-        add_meter(meter_name, meter_class(**meter_attrs))
+        add_meter(meter_name, _init_object(meter_attrs))
 
 
 ###
@@ -72,12 +68,21 @@ def is_running_hook():
 
 
 ##### Private methods #####
-def _get_class(path):
+def _init_object(attrs):
+    assert isinstance(attrs, (str, dict)), "Only a string classname or dict"
+    if isinstance(attrs, str):
+        path = attrs
+        attrs = {}
+    else:
+        attrs = dict(attrs)
+        path = attrs.pop("class")
+
     path = path.split(".")
     assert len(path) >= 2, "Required package.class"
     module_name = ".".join(path[:-1])
     cls = getattr(importlib.import_module(module_name), path[-1])
-    return cls
+    obj = cls(**attrs)
+    return obj
 
 def _format_name(name):
     # TODO: Implement fqdn, node
