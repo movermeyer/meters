@@ -20,6 +20,7 @@ if __name__ == "__main__":
         packages=(
             "meters",
             "meters/handlers",
+            "meters/scales",
         ),
 
         classifiers=( # http://pypi.python.org/pypi?:action=list_classifiers
