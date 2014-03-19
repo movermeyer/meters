@@ -21,6 +21,7 @@ if __name__ == "__main__":
             "meters",
             "meters/handlers",
             "meters/scales",
+            "meters/tests",
         ),
 
         classifiers=( # http://pypi.python.org/pypi?:action=list_classifiers
