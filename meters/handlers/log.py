@@ -1,4 +1,6 @@
+import operator
 import logging
+
 from . import ThreadedHandler
 
 
@@ -14,7 +16,7 @@ class LoggingHandler(ThreadedHandler):
         msg = "\n----- BEGIN METERS -----\n{}\n----- END METERS -----\n".format(
             "\n".join(
                 "{}={}".format(key, value)
-                for (key, value) in metrics.items()
+                for (key, value) in sorted(metrics.items(), key=operator.itemgetter(0))
             )
         )
         self._logger.log(self._level, msg, extra={ self._extra: metrics })
