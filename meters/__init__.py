@@ -11,6 +11,10 @@ _placeholders = {}
 #_watcher = _Watcher() # XXX: See bellow
 
 
+##### Public objects #####
+prefix = ""
+
+
 ##### Public methods #####
 def add_meter(name, meter):
     _meters[name] = meter
@@ -35,6 +39,9 @@ def add_placeholder(name, placeholder):
 
 ###
 def configure(config):
+    global prefix
+    prefix = config.get("common", {}).get("prefix", prefix)
+
     for (name, attrs) in config.get("placeholders", {}).items():
         add_placeholder(name, _init_object(attrs, False))
 
@@ -67,10 +74,9 @@ def dump():
         meter_value = meter()
         if isinstance(meter_value, dict): # For meters with multiple arrows (values)
             for (arrow, value) in meter_value.items():
-                meter_name = "{}.{}".format(name, arrow).format(**placeholders)
-                results[meter_name] = value
+                results[_format_metric_name((name, arrow), placeholders)] = value
         else:
-            results[name.format(**placeholders)] = meter_value
+            results[_format_metric_name(name, placeholders)] = meter_value
     return results
 
 def is_running_hook():
@@ -108,6 +114,18 @@ def _init_object(attrs, enable_kwargs=True):
         obj = ( lambda: cls )
 
     return obj
+
+def _format_metric_name(name, placeholders):
+    if isinstance(name, (list, tuple)):
+        name = _join_metric_name(*name)
+    if name.startswith("!"):
+        name = name[1:] # Ignore the global prefix
+    else:
+        name = _join_metric_name(prefix, name) # Apply the global prefix
+    return name.format(**placeholders)
+
+def _join_metric_name(*parts):
+    return ".".join(filter(None, parts))
 
 
 ###
