@@ -15,6 +15,11 @@ def add_meter(name, meter):
     _meters[name] = meter
     return meter
 
+def get_meter(name):
+    return _meters[name]
+
+
+###
 def add_handler(handler):
     assert hasattr(handler, "set_dumper")
     assert hasattr(handler, "start")
