@@ -115,17 +115,11 @@ def _init_object(attrs, enable_kwargs=True):
 
     return obj
 
-def _format_metric_name(name, placeholders):
-    if isinstance(name, (list, tuple)):
-        name = _join_metric_name(*name)
-    if name.startswith("!"):
-        name = name[1:] # Ignore the global prefix
-    else:
-        name = _join_metric_name(prefix, name) # Apply the global prefix
+def _format_metric_name(parts, placeholders):
+    if not isinstance(parts, (list, tuple)):
+        parts = (parts,)
+    name =  ".".join(filter(None, (prefix,) + parts)) # Apply the global prefix
     return name.format(**placeholders)
-
-def _join_metric_name(*parts):
-    return ".".join(filter(None, parts))
 
 
 ###

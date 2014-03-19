@@ -21,7 +21,7 @@ import meters.scales.shared
 
 meters.configure({
         "common": {
-            "prefix": "servers.{env[USER]}.{uname[1]}",
+            "prefix": "servers.{uname[1]}.{env[USER]}",
         },
 
         "placeholders": {
@@ -55,7 +55,7 @@ meters.configure({
                 "class": "meters.scales.python.Resources",
                 "who":   "RUSAGE_CHILDREN",
             },
-            "!local.now": time.time, # ! - Disable global prefix
+            "time.now": time.time,
         },
     })
 
@@ -65,7 +65,7 @@ handler.setLevel(logging.DEBUG)
 logging.getLogger().addHandler(handler)
 logging.getLogger().setLevel(logging.DEBUG)
 
-foo = meters.add_meter("{env[USER]}.{uname[1]}.foo", meters.scales.shared.Value(float))
+foo = meters.add_meter("foo", meters.scales.shared.Value(float))
 meters.start()
 
 count = 0
@@ -78,44 +78,44 @@ while True:
 
 The result will be the following metrics:
 ```python
-local.now=1395253385.465558
-servers.mdevaev.reki.mdevaev.reki.foo=0.0
-servers.mdevaev.reki.proc.la.la1=0.46
-servers.mdevaev.reki.proc.la.la15=1.14
-servers.mdevaev.reki.proc.la.la5=0.98
-servers.mdevaev.reki.proc.self.cstime=0.0
-servers.mdevaev.reki.proc.self.cutime=0.0
-servers.mdevaev.reki.proc.self.rss=9824.0
-servers.mdevaev.reki.proc.self.stime=0.0
-servers.mdevaev.reki.proc.self.utime=0.09
-servers.mdevaev.reki.proc.self.vsize=2090475.52
-servers.mdevaev.reki.proc.stat.cpu.guest=0
-servers.mdevaev.reki.proc.stat.cpu.guest_nice=0
-servers.mdevaev.reki.proc.stat.cpu.idle=32537196
-servers.mdevaev.reki.proc.stat.cpu.iowait=198023
-servers.mdevaev.reki.proc.stat.cpu.irq=59
-servers.mdevaev.reki.proc.stat.cpu.nice=1375
-servers.mdevaev.reki.proc.stat.cpu.softirq=7146
-servers.mdevaev.reki.proc.stat.cpu.steal=0
-servers.mdevaev.reki.proc.stat.cpu.system=3213874
-servers.mdevaev.reki.proc.stat.cpu.user=7361767
-servers.mdevaev.reki.py_objects.gc_objects=8603
-servers.mdevaev.reki.py_rusage.ru_idrss=0
-servers.mdevaev.reki.py_rusage.ru_inblock=0
-servers.mdevaev.reki.py_rusage.ru_isrss=0
-servers.mdevaev.reki.py_rusage.ru_ixrss=0
-servers.mdevaev.reki.py_rusage.ru_majflt=0
-servers.mdevaev.reki.py_rusage.ru_maxrss=7156
-servers.mdevaev.reki.py_rusage.ru_minflt=786
-servers.mdevaev.reki.py_rusage.ru_msgrcv=0
-servers.mdevaev.reki.py_rusage.ru_msgsnd=0
-servers.mdevaev.reki.py_rusage.ru_nivcsw=2
-servers.mdevaev.reki.py_rusage.ru_nsignals=0
-servers.mdevaev.reki.py_rusage.ru_nswap=0
-servers.mdevaev.reki.py_rusage.ru_nvcsw=3
-servers.mdevaev.reki.py_rusage.ru_oublock=0
-servers.mdevaev.reki.py_rusage.ru_stime=0.0
-servers.mdevaev.reki.py_rusage.ru_utime=0.003333
-servers.mdevaev.reki.py_threads.alive_threads=3
+servers.reki.mdevaev.foo=0.0
+servers.reki.mdevaev.proc.la.la1=0.87
+servers.reki.mdevaev.proc.la.la15=0.71
+servers.reki.mdevaev.proc.la.la5=0.81
+servers.reki.mdevaev.proc.self.cstime=0.0
+servers.reki.mdevaev.proc.self.cutime=0.0
+servers.reki.mdevaev.proc.self.rss=10048.0
+servers.reki.mdevaev.proc.self.stime=0.01
+servers.reki.mdevaev.proc.self.utime=0.11
+servers.reki.mdevaev.proc.self.vsize=2091663.36
+servers.reki.mdevaev.proc.stat.cpu.guest=0
+servers.reki.mdevaev.proc.stat.cpu.guest_nice=0
+servers.reki.mdevaev.proc.stat.cpu.idle=27298939
+servers.reki.mdevaev.proc.stat.cpu.iowait=176185
+servers.reki.mdevaev.proc.stat.cpu.irq=61
+servers.reki.mdevaev.proc.stat.cpu.nice=1386
+servers.reki.mdevaev.proc.stat.cpu.softirq=7285
+servers.reki.mdevaev.proc.stat.cpu.steal=0
+servers.reki.mdevaev.proc.stat.cpu.system=3463200
+servers.reki.mdevaev.proc.stat.cpu.user=7594520
+servers.reki.mdevaev.py_objects.gc_objects=9082
+servers.reki.mdevaev.py_rusage.ru_idrss=0
+servers.reki.mdevaev.py_rusage.ru_inblock=0
+servers.reki.mdevaev.py_rusage.ru_isrss=0
+servers.reki.mdevaev.py_rusage.ru_ixrss=0
+servers.reki.mdevaev.py_rusage.ru_majflt=0
+servers.reki.mdevaev.py_rusage.ru_maxrss=7372
+servers.reki.mdevaev.py_rusage.ru_minflt=788
+servers.reki.mdevaev.py_rusage.ru_msgrcv=0
+servers.reki.mdevaev.py_rusage.ru_msgsnd=0
+servers.reki.mdevaev.py_rusage.ru_nivcsw=2
+servers.reki.mdevaev.py_rusage.ru_nsignals=0
+servers.reki.mdevaev.py_rusage.ru_nswap=0
+servers.reki.mdevaev.py_rusage.ru_nvcsw=3
+servers.reki.mdevaev.py_rusage.ru_oublock=0
+servers.reki.mdevaev.py_rusage.ru_stime=0.0
+servers.reki.mdevaev.py_rusage.ru_utime=0.003333
+servers.reki.mdevaev.py_threads.alive_threads=3
+servers.reki.mdevaev.time.now=1395266477.651378
 ```
 
