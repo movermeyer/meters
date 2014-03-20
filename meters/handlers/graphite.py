@@ -10,7 +10,7 @@ from . import ThreadedHandler
 
 
 ##### Private objects #####
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(__name__)
 
 
 ##### Public classes #####
