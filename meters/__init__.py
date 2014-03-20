@@ -76,10 +76,10 @@ def stop():
 
 def dump():
     # TODO: lazy placeholders
-    placeholders = { key: value() for (key, value) in _placeholders.items() }
+    placeholders = { key: value() for (key, value) in dict(_placeholders).items() }
 
     results = {}
-    for (name, meter) in _meters.items():
+    for (name, meter) in dict(_meters).items():
         try:
             meter_value = meter()
         except Exception:
