@@ -40,7 +40,7 @@ class GraphiteHandler(ThreadedHandler):
 
     def shot(self, metrics):
         # TODO: Add queue for unsended metrics
-        threading.Thread(target=( lambda: self._send(metrics) ), daemon=True).start()
+        threading.Thread(target=lambda: self._send(metrics)).start()
 
 
     ### Private ###
