@@ -1,13 +1,17 @@
 import importlib
 import threading
 import inspect
+import logging
 import time
 
 
 ##### Private objects #####
+_logger = logging.getLogger(__name__)
+
 _meters = {}
 _handlers = []
 _placeholders = {}
+
 #_watcher = _Watcher() # XXX: See bellow
 
 
@@ -54,16 +58,21 @@ def configure(config):
 
 ###
 def start(auto_stop=True):
+    _logger.debug("Starting metrics thread; auto_stop=%s", auto_stop)
     for handler in _handlers:
+        _logger.debug("Starting handler %s...", handler)
         handler.start()
     if auto_stop:
         _watcher.start()
+    _logger.debug("All metrics were started")
 
 def stop():
+    _logger.debug("Perform a manual stop metrics...")
     if _watcher.is_alive():
         _watcher.stop()
     else:
         _inner_stop()
+    _logger.debug("All metrics were stopped")
 
 def dump():
     # TODO: lazy placeholders
@@ -71,7 +80,11 @@ def dump():
 
     results = {}
     for (name, meter) in _meters.items():
-        meter_value = meter()
+        try:
+            meter_value = meter()
+        except Exception:
+            _logger.warning("An exception occured while processing metric %s::%s", meter, name, exc_info=True)
+            meter_value = None
         if isinstance(meter_value, dict): # For meters with multiple arrows (values)
             for (arrow, value) in meter_value.items():
                 results[_format_metric_name((name, arrow), placeholders)] = value
@@ -125,6 +138,7 @@ def _format_metric_name(parts, placeholders):
 ###
 def _inner_stop():
     for handler in _handlers:
+        _logger.debug("Stopping handler %s...", handler)
         handler.stop()
 
 

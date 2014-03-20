@@ -10,7 +10,7 @@ from . import ThreadedHandler
 
 
 ##### Private objects #####
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(__name__)
 
 
 ##### Public classes #####
@@ -32,10 +32,7 @@ class GraphiteHandler(ThreadedHandler):
         self._port = ( parsed_url.port or 2004 )
 
         self._url = "{}://{}:{}".format(parsed_url.scheme.lower(), self._host, self._port)
-
         self._timeout = timeout
-        self._prefix = ""
-        self._suffix = ""
 
 
     ### Override ###
@@ -52,10 +49,16 @@ class GraphiteHandler(ThreadedHandler):
         #   http://graphite.readthedocs.org/en/latest/feeding-carbon.html#the-pickle-protocol
 
         now = int(time.time())
-        data = pickle.dumps([
-                (self._make_name(name), (now, value))
-                for (name, value) in metrics.items()
-            ], protocol=2)
+        plains = [
+            (name, (now, value))
+            for (name, value) in metrics.items()
+            if value is not None # Filter failed metrics
+        ]
+        if len(plains) == 0:
+            _logger.debug("Passed the empty metrics list")
+            return
+
+        data = pickle.dumps(plains, protocol=2)
         header = struct.pack("!L", len(data))
         message = header + data
 
@@ -66,9 +69,6 @@ class GraphiteHandler(ThreadedHandler):
         finally:
             sock.close()
         _logger.debug("Data successfully sended to %s!", self._url)
-
-    def _make_name(self, name):
-        return ".".join(filter(None, (self._prefix, name, self._suffix)))
 
     def _connect(self):
         rejects = []
