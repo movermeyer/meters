@@ -75,22 +75,26 @@ def stop():
     _logger.debug("All metrics were stopped")
 
 def dump():
-    # TODO: lazy placeholders
-    placeholders = { key: value() for (key, value) in dict(_placeholders).items() }
+    try:
+        # TODO: lazy placeholders
+        placeholders = { key: value() for (key, value) in dict(_placeholders).items() }
 
-    results = {}
-    for (name, meter) in dict(_meters).items():
-        try:
-            meter_value = meter()
-        except Exception:
-            _logger.warning("An exception occured while processing metric %s::%s", meter, name, exc_info=True)
-            meter_value = None
-        if isinstance(meter_value, dict): # For meters with multiple arrows (values)
-            for (arrow, value) in meter_value.items():
-                results[_format_metric_name((name, arrow), placeholders)] = value
-        else:
-            results[_format_metric_name(name, placeholders)] = meter_value
-    return results
+        results = {}
+        for (name, meter) in dict(_meters).items():
+            try:
+                meter_value = meter()
+            except Exception:
+                _logger.warning("An exception occured while processing metric %s::%s", meter, name, exc_info=True)
+                meter_value = None
+            if isinstance(meter_value, dict): # For meters with multiple arrows (values)
+                for (arrow, value) in meter_value.items():
+                    results[_format_metric_name((name, arrow), placeholders)] = value
+            else:
+                results[_format_metric_name(name, placeholders)] = meter_value
+        return results
+    except Exception:
+        _logger.exception("An exception occured while dumping metrics")
+        return {}
 
 def is_running_hook():
     # Usually, MainThread lives up to the completion of all the rest.
