@@ -1,13 +1,17 @@
 import importlib
 import threading
 import inspect
+import logging
 import time
 
 
 ##### Private objects #####
+_logger = logging.getLogger(__name__)
+
 _meters = {}
 _handlers = []
 _placeholders = {}
+
 #_watcher = _Watcher() # XXX: See bellow
 
 
@@ -71,7 +75,11 @@ def dump():
 
     results = {}
     for (name, meter) in _meters.items():
-        meter_value = meter()
+        try:
+            meter_value = meter()
+        except Exception:
+            _logger.warning("An exception occured while processing metric %s::%s", meter, name, exc_info=True)
+            meter_value = None
         if isinstance(meter_value, dict): # For meters with multiple arrows (values)
             for (arrow, value) in meter_value.items():
                 results[_format_metric_name((name, arrow), placeholders)] = value
