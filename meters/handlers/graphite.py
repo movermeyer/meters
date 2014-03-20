@@ -16,8 +16,8 @@ _logger = logging.getLogger(__name__)
 
 ##### Public classes #####
 class GraphiteHandler(ThreadedHandler):
-    def __init__(self, url="tcp://localhost:2004", timeout=None, period=5):
-        ThreadedHandler.__init__(self, period)
+    def __init__(self, dumper, period=5, url="tcp://localhost:2004", timeout=None):
+        ThreadedHandler.__init__(self, dumper, period)
 
         parsed_url = urllib.parse.urlparse(url)
         if not parsed_url.scheme: # Empty or None
