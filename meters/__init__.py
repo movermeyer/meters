@@ -58,16 +58,21 @@ def configure(config):
 
 ###
 def start(auto_stop=True):
+    _logger.debug("Starting metrics thread; auto_stop=%s", auto_stop)
     for handler in _handlers:
+        _logger.debug("Starting handler %s...", handler)
         handler.start()
     if auto_stop:
         _watcher.start()
+    _logger.debug("All metrics were started")
 
 def stop():
+    _logger.debug("Perform a manual stop metrics...")
     if _watcher.is_alive():
         _watcher.stop()
     else:
         _inner_stop()
+    _logger.debug("All metrics were stopped")
 
 def dump():
     # TODO: lazy placeholders
@@ -133,6 +138,7 @@ def _format_metric_name(parts, placeholders):
 ###
 def _inner_stop():
     for handler in _handlers:
+        _logger.debug("Stopping handler %s...", handler)
         handler.stop()
 
 
