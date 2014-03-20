@@ -1,3 +1,4 @@
+import re
 import urllib.parse
 import socket
 import pickle
@@ -50,7 +51,7 @@ class GraphiteHandler(ThreadedHandler):
 
         now = int(time.time())
         plains = [
-            (name, (now, value))
+            (re.sub(r"[^\w\.]", "_", name), (now, value))
             for (name, value) in metrics.items()
             if value is not None # Filter failed metrics
         ]
