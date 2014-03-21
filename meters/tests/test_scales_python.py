@@ -9,8 +9,12 @@ from ..scales import python
 class TestResources(unittest.TestCase): # pylint: disable=R0904
     def test_init(self):
         for args in [()] + [
-                (getattr(resource, who),)
+                (getattr(resource, who),) # As variable
                 for who in dir(resource)
+                if who.startswith("RUSAGE_")
+            ] + [
+                (who,)
+                for who in dir(resource) # As text
                 if who.startswith("RUSAGE_")
             ]:
             results = python.Resources(*args)()
