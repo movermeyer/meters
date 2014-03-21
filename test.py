@@ -4,6 +4,7 @@
 import unittest
 
 # pylint: disable=W0401,W0614
+from meters.tests.test_scales_python import *
 from meters.tests.test_scales_shared import *
 from meters.tests.test_shortcuts import *
 
