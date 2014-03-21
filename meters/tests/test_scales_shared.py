@@ -13,9 +13,9 @@ class TestShared(unittest.TestCase): # pylint: disable=R0904
                 ((float,),     0.0),
                 ((float, 5.0), 5.0),
             ):
-            value = shared.Value(*args)()
-            self.assertIsInstance(value, type(number))
-            self.assertEqual(value, number)
+            result = shared.Value(*args)()
+            self.assertIsInstance(result, type(number))
+            self.assertEqual(result, number)
 
     def test_set_int(self):
         value = shared.Value()
