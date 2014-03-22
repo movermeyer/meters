@@ -1,4 +1,6 @@
 import unittest
+import operator
+import multiprocessing
 
 from ..scales import shared
 
@@ -39,10 +41,29 @@ class TestShared(unittest.TestCase): # pylint: disable=R0904
         value -= 5
         self.assertEqual(value(), -6)
 
+    def test_multiprocessing_set(self):
+        self._test_multiprocessing(1, lambda value, operand: value.set(operand))
+
+    def test_multiprocessing_iadd(self):
+        self._test_multiprocessing(5, operator.iadd)
+
+    def test_multiprocessing_isub(self):
+        self._test_multiprocessing(-5, operator.isub)
+
     def _test_set(self, value_type, numbers):
         value = shared.Value(value_type)
         for number in numbers:
             value.set(number)
             self.assertIsInstance(value(), value_type)
             self.assertEqual(value(), number)
+
+    def _test_multiprocessing(self, number, op):
+        value = shared.Value()
+        def worker(value):
+            for _ in range(abs(number)):
+                op(value, 1)
+        process = multiprocessing.Process(target=worker, args=(value,))
+        process.start()
+        process.join()
+        self.assertEqual(value(), number)
 
