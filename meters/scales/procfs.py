@@ -41,7 +41,7 @@ class SelfStat:
             "stime":  int(proc_stats[14]) // jiffies_per_sec, # Amount of time that this process has been scheduled in kernel mode.
             "cutime": int(proc_stats[15]) // jiffies_per_sec, # Amount of time that this process's waited-for children have been scheduled in user mode.
             "cstime": int(proc_stats[16]) // jiffies_per_sec, # Amount of time that this process's waited-for children have been scheduled in kernel mode
-            "vsize":  int(proc_stats[22]) // jiffies_per_sec, # Virtual memory size in bytes.
+            "vsize":  int(proc_stats[22]),             # Virtual memory size in bytes.
             "rss":    int(proc_stats[23]) * page_size, # Resident Set Size in bytes.
         }
 
