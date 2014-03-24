@@ -8,6 +8,7 @@ from meters.tests.test_scales_procfs import *
 from meters.tests.test_scales_python import *
 from meters.tests.test_scales_shared import *
 from meters.tests.test_shortcuts import *
+from meters.tests.test_core import *
 
 
 ##### Main #####

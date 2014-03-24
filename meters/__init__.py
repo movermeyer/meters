@@ -121,7 +121,13 @@ def is_running_hook():
     # Usually, MainThread lives up to the completion of all the rest.
     # We need to determine when it is completed and to stop sending and receiving messages.
     # For our architecture that is enough.
-    return threading._shutdown.__self__.is_alive() # pylint: disable=W0212
+    return get_main_thread().is_alive()
+
+def get_main_thread():
+    if hasattr(threading, "main_thread"): # Python >= 3.4
+        return threading.main_thread() # pylint: disable=E1101
+    else: # Dirty hack for Python <= 3.3
+        return threading._shutdown.__self__ # pylint: disable=W0212
 
 
 ##### Private methods #####
