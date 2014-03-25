@@ -27,21 +27,21 @@ class Stat:
                 metric = cpu_stats[count + 1]
             except IndexError:
                 break
-            results["cpu." + name] = metric
+            results["cpu." + name] = int(metric)
         return results
 
 class SelfStat:
     def __call__(self):
         jiffies_per_sec = os.sysconf("SC_CLK_TCK") # Clock ticks per second... jiffies (Hz)
-        page_size = os.sysconf("SC_PAGE_SIZE") / 1024
+        page_size = os.sysconf("SC_PAGE_SIZE") // 1024
         with open("/proc/self/stat") as stat_file:
             proc_stats = stat_file.readline().split()
         return {
-            "utime":  int(proc_stats[13]) / jiffies_per_sec, # Amount of time that this process has been scheduled in user mode.
-            "stime":  int(proc_stats[14]) / jiffies_per_sec, # Amount of time that this process has been scheduled in kernel mode.
-            "cutime": int(proc_stats[15]) / jiffies_per_sec, # Amount of time that this process's waited-for children have been scheduled in user mode.
-            "cstime": int(proc_stats[16]) / jiffies_per_sec, # Amount of time that this process's waited-for children have been scheduled in kernel mode
-            "vsize":  int(proc_stats[22]) / jiffies_per_sec, # Virtual memory size in bytes.
+            "utime":  int(proc_stats[13]) // jiffies_per_sec, # Amount of time that this process has been scheduled in user mode.
+            "stime":  int(proc_stats[14]) // jiffies_per_sec, # Amount of time that this process has been scheduled in kernel mode.
+            "cutime": int(proc_stats[15]) // jiffies_per_sec, # Amount of time that this process's waited-for children have been scheduled in user mode.
+            "cstime": int(proc_stats[16]) // jiffies_per_sec, # Amount of time that this process's waited-for children have been scheduled in kernel mode
+            "vsize":  int(proc_stats[22]),             # Virtual memory size in bytes.
             "rss":    int(proc_stats[23]) * page_size, # Resident Set Size in bytes.
         }
 
