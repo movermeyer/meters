@@ -106,9 +106,7 @@ def stop():
 
 def dump():
     try:
-        # TODO: lazy placeholders
-        placeholders = { key: value() for (key, value) in dict(_placeholders).items() }
-
+        placeholders = _get_placeholders_cache()
         results = {}
         for (name, meter) in dict(_meters).items():
             try:
@@ -170,6 +168,13 @@ def _init_object(attrs, enable_kwargs=True, construct=True):
         obj = ( lambda: cls )
 
     return obj
+
+def _get_placeholders_cache():
+    # TODO: lazy placeholders
+    return {
+        key: ( value() if callable(value) else value ),
+        for (key, value) in dict(_placeholders).items()
+    }
 
 def _format_metric_name(parts, placeholders):
     if not isinstance(parts, (list, tuple)):
