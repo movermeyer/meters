@@ -11,10 +11,10 @@ _logger = logging.getLogger(__name__)
 _is_running = False
 _meters = {}
 _handler_classes = []
-_handlers = []
 _placeholders = {}
 
 _watcher = None
+_handlers = []
 
 
 ##### Public objects #####
@@ -55,6 +55,15 @@ def configure(config):
 
     for (name, attrs) in config.get("meters", {}).items():
         add_meter(name, _init_object(attrs))
+
+def clear():
+    global _meters
+    global _handler_classes
+    global _placeholders
+    stop()
+    _meters = {}
+    _handler_classes = []
+    _placeholders = {}
 
 
 ###
