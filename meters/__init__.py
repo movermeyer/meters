@@ -172,7 +172,7 @@ def _init_object(attrs, enable_kwargs=True, construct=True):
 def _get_placeholders_cache():
     # TODO: lazy placeholders
     return {
-        key: ( value() if callable(value) else value ),
+        key: ( value() if callable(value) else value )
         for (key, value) in dict(_placeholders).items()
     }
 
