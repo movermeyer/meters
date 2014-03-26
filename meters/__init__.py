@@ -10,11 +10,10 @@ _logger = logging.getLogger(__name__)
 
 _is_running = False
 _meters = {}
-_handler_classes = []
+_handlers = []
 _placeholders = {}
 
 _watcher = None
-_handlers = []
 
 
 ##### Public objects #####
@@ -29,12 +28,11 @@ def add_meter(name, obj):
 def get_meter(name):
     return _meters[name]
 
-def add_handler(cls, **kwargs):
-    assert inspect.isclass(cls), "Required class"
-    assert hasattr(cls, "start")
-    assert hasattr(cls, "stop")
-    assert hasattr(cls, "is_alive")
-    _handler_classes.append((cls, kwargs))
+def add_handler(obj):
+    assert hasattr(obj, "start")
+    assert hasattr(obj, "stop")
+    assert hasattr(obj, "is_alive")
+    _handlers.append(obj)
 
 def add_placeholder(name, obj):
     _placeholders[name] = obj
@@ -50,19 +48,18 @@ def configure(config):
         add_placeholder(name, _init_object(attrs, enable_kwargs=False))
 
     for attrs in config.get("handlers", {}).values():
-        (cls, kwargs) = _init_object(attrs, construct=False) # pylint: disable=W0633
-        add_handler(cls, **kwargs)
+        add_handler(_init_object(attrs))
 
     for (name, attrs) in config.get("meters", {}).items():
         add_meter(name, _init_object(attrs))
 
 def clear():
     global _meters
-    global _handler_classes
+    global _handlers
     global _placeholders
     stop()
     _meters = {}
-    _handler_classes = []
+    _handlers = []
     _placeholders = {}
 
 
@@ -74,13 +71,9 @@ def start(watch=True):
     assert not _is_running, "Attempt to double start()"
 
     _logger.debug("Starting metrics threads; watch=%s", watch)
-    for (cls, kwargs) in _handler_classes:
-        _logger.debug("Starting handler %s...", cls)
-        kwargs = dict(kwargs)
-        kwargs["dumper"] = dump
-        handler = cls(**kwargs)
-        handler.start()
-        _handlers.append(handler)
+    for handler in _handlers:
+        _logger.debug("Starting handler %s...", handler)
+        handler.start(dump)
 
     if watch:
         if _watcher is not None and _watcher.is_alive():
@@ -95,6 +88,7 @@ def start(watch=True):
     _logger.debug("All metrics were started")
 
 def stop():
+    assert _is_running, "Attempt to double stop()"
     _logger.debug("Perform a manual stop metrics...")
     if _watcher.is_alive():
         _watcher.stop()
@@ -138,7 +132,7 @@ def get_main_thread():
 
 
 ##### Private methods #####
-def _init_object(attrs, enable_kwargs=True, construct=True):
+def _init_object(attrs, enable_kwargs=True):
     if isinstance(attrs, dict):
         assert enable_kwargs, "Keyword arguments is disabled for {}".format(attrs)
         attrs = dict(attrs)
@@ -154,11 +148,8 @@ def _init_object(attrs, enable_kwargs=True, construct=True):
         cls = getattr(importlib.import_module(module_name), path[-1])
 
     if inspect.isclass(cls):
-        if construct:
-            # Make objects from class
-            obj = cls(**attrs)
-        else:
-            obj = (cls, attrs) # Return class and his arguments, for handlers
+        # Make objects from class
+        obj = cls(**attrs)
     elif callable(cls):
         # Wrap non-class objects like a function to lambdas
         obj = ( lambda: cls(**attrs) )
@@ -186,11 +177,9 @@ def _format_metric_name(parts, placeholders):
 ###
 def _inner_stop():
     global _is_running
-    global _handlers
     for handler in _handlers:
         _logger.debug("Stopping handler %s...", handler)
         handler.stop()
-    _handlers = []
     _is_running = False
 
 

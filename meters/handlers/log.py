@@ -6,8 +6,8 @@ from . import ThreadedHandler
 
 ##### Public classes #####
 class LoggingHandler(ThreadedHandler):
-    def __init__(self, dumper, period=5, logger=__name__, level=logging.INFO, extra="metrics"):
-        ThreadedHandler.__init__(self, dumper, period)
+    def __init__(self, period=5, logger=__name__, level=logging.INFO, extra="metrics"):
+        ThreadedHandler.__init__(self, period)
         self._logger = logging.getLogger(logger)
         self._level = level
         self._extra = extra

@@ -45,7 +45,8 @@ class TestStartStop(unittest.TestCase): # pylint: disable=R0904
     def test_many_stop(self):
         try:
             start()
+            stop()
         finally:
-            stop()
-            stop()
+            with self.assertRaisesRegex(AssertionError, "Attempt to double stop()"):
+                stop()
 
