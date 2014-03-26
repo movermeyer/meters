@@ -14,7 +14,7 @@ _handlers = []
 _placeholders = {}
 
 _watcher = None
-_stop_lock = threading.Lock()
+_control_lock = threading.Lock()
 
 
 ##### Public objects #####
@@ -66,12 +66,10 @@ def clear():
 
 ###
 def start(watch=True):
-    global _is_running
-    global _watcher
+    with _control_lock:
+        global _is_running
+        assert not _is_running, "Attempt to double start()"
 
-    assert not _is_running, "Attempt to double start()"
-
-    with _stop_lock:
         _logger.debug("Starting metrics threads; watch=%s", watch)
         for handler in _handlers:
             _logger.debug("Starting handler %s...", handler)
@@ -79,6 +77,7 @@ def start(watch=True):
 
         if watch:
             _logger.debug("Starting the watcher...")
+            global _watcher
             _watcher = _Watcher(_get_main_thread(), _inner_stop)
             _watcher.start()
             _logger.debug("Watcher is started")
@@ -87,15 +86,16 @@ def start(watch=True):
         _logger.debug("All metrics were started")
 
 def stop():
-    assert _is_running, "Attempt to double stop()"
-    _logger.debug("Perform a manual stop metrics...")
-    if _watcher.is_alive():
-        _watcher.stop()
-        _logger.debug("Waiting for watcher...")
-        _watcher.join()
-    else:
-        _inner_stop()
-    _logger.debug("All metrics were stopped")
+    with _control_lock:
+        assert _is_running, "Attempt to double stop()"
+        _logger.debug("Perform a manual stop metrics...")
+        if _watcher.is_alive():
+            _watcher.stop()
+            _logger.debug("Waiting for watcher...")
+            _watcher.join()
+        else:
+            _inner_stop()
+        _logger.debug("All metrics were stopped")
 
 def dump():
     try:
@@ -168,12 +168,12 @@ def _get_main_thread():
         return threading._shutdown.__self__ # pylint: disable=W0212
 
 def _inner_stop():
+    # Locking is not required, as has already been done in the stop()
+    for handler in _handlers:
+        _logger.debug("Stopping handler %s...", handler)
+        handler.stop()
     global _is_running
-    with _stop_lock:
-        for handler in _handlers:
-            _logger.debug("Stopping handler %s...", handler)
-            handler.stop()
-        _is_running = False
+    _is_running = False
 
 
 ##### Private classes #####
@@ -183,7 +183,6 @@ class _Watcher(threading.Thread):
         self._thread = thread
         self._action = action
         self._stop_thread = False
-        self._event = threading.Event()
 
     def stop(self):
         self._stop_thread = True
