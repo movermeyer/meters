@@ -14,6 +14,7 @@ _handlers = []
 _placeholders = {}
 
 _watcher = None
+_stop_lock = threading.Lock()
 
 
 ##### Public objects #####
@@ -70,19 +71,20 @@ def start(watch=True):
 
     assert not _is_running, "Attempt to double start()"
 
-    _logger.debug("Starting metrics threads; watch=%s", watch)
-    for handler in _handlers:
-        _logger.debug("Starting handler %s...", handler)
-        handler.start(dump)
+    with _stop_lock:
+        _logger.debug("Starting metrics threads; watch=%s", watch)
+        for handler in _handlers:
+            _logger.debug("Starting handler %s...", handler)
+            handler.start(dump)
 
-    if watch:
-        _logger.debug("Starting the watcher...")
-        _watcher = _Watcher(_get_main_thread(), _inner_stop)
-        _watcher.start()
-        _logger.debug("Watcher is started")
+        if watch:
+            _logger.debug("Starting the watcher...")
+            _watcher = _Watcher(_get_main_thread(), _inner_stop)
+            _watcher.start()
+            _logger.debug("Watcher is started")
 
-    _is_running = True
-    _logger.debug("All metrics were started")
+        _is_running = True
+        _logger.debug("All metrics were started")
 
 def stop():
     assert _is_running, "Attempt to double stop()"
@@ -167,10 +169,11 @@ def _get_main_thread():
 
 def _inner_stop():
     global _is_running
-    for handler in _handlers:
-        _logger.debug("Stopping handler %s...", handler)
-        handler.stop()
-    _is_running = False
+    with _stop_lock:
+        for handler in _handlers:
+            _logger.debug("Stopping handler %s...", handler)
+            handler.stop()
+        _is_running = False
 
 
 ##### Private classes #####
