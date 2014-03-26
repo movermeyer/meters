@@ -182,16 +182,17 @@ class _Watcher(threading.Thread):
         threading.Thread.__init__(self)
         self._thread = thread
         self._action = action
+        self._stop_thread = False
         self._event = threading.Event()
 
     def stop(self):
-        self._event.set()
+        self._stop_thread = True
 
     def run(self):
         # Usually, MainThread lives up to the completion of all the rest.
         # We need to determine when it is completed and to stop sending and receiving messages.
         # For our architecture that is enough.
-        while not self._event.is_set() and self._thread.is_alive():
+        while not self._stop_thread and self._thread.is_alive():
             self._thread.join(timeout=0.1)
         self._action()
 
