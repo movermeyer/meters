@@ -80,7 +80,7 @@ def start(watch=True):
             _logger.debug("Waiting previous watcher...")
             _watcher.join()
         _logger.debug("Starting the watcher...")
-        _watcher = _Watcher()
+        _watcher = _Watcher(_get_main_thread(), _inner_stop)
         _watcher.start()
         _logger.debug("Watcher is started")
 
@@ -117,19 +117,6 @@ def dump():
     except Exception:
         _logger.exception("An exception occured while dumping metrics")
         return {}
-
-def is_running_hook():
-    # Usually, MainThread lives up to the completion of all the rest.
-    # We need to determine when it is completed and to stop sending and receiving messages.
-    # For our architecture that is enough.
-    return get_main_thread().is_alive()
-
-def get_main_thread():
-    if hasattr(threading, "main_thread"): # Python >= 3.4
-        return threading.main_thread() # pylint: disable=E1101
-    else: # Dirty hack for Python <= 3.3
-        return threading._shutdown.__self__ # pylint: disable=W0212
-
 
 ##### Private methods #####
 def _init_object(attrs, enable_kwargs=True):
@@ -175,6 +162,12 @@ def _format_metric_name(parts, placeholders):
 
 
 ###
+def _get_main_thread():
+    if hasattr(threading, "main_thread"): # Python >= 3.4
+        return threading.main_thread() # pylint: disable=E1101
+    else: # Dirty hack for Python <= 3.3
+        return threading._shutdown.__self__ # pylint: disable=W0212
+
 def _inner_stop():
     global _is_running
     for handler in _handlers:
@@ -185,15 +178,20 @@ def _inner_stop():
 
 ##### Private classes #####
 class _Watcher(threading.Thread):
-    def __init__(self):
+    def __init__(self, thread, action):
         threading.Thread.__init__(self)
-        self._stop_loop = False
+        self._thread = thread
+        self._action = action
+        self._event = threading.Event()
 
     def stop(self):
-        self._stop_loop = True
+        self._event.set()
 
     def run(self):
-        while not self._stop_loop and is_running_hook():
-            time.sleep(1)
-        _inner_stop()
+        # Usually, MainThread lives up to the completion of all the rest.
+        # We need to determine when it is completed and to stop sending and receiving messages.
+        # For our architecture that is enough.
+        while not self._event.is_set() and self._thread.is_alive():
+            self._thread.join(timeout=0.1)
+        self._action()
 
