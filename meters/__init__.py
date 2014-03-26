@@ -76,9 +76,6 @@ def start(watch=True):
         handler.start(dump)
 
     if watch:
-        if _watcher is not None and _watcher.is_alive():
-            _logger.debug("Waiting previous watcher...")
-            _watcher.join()
         _logger.debug("Starting the watcher...")
         _watcher = _Watcher(_get_main_thread(), _inner_stop)
         _watcher.start()
