@@ -2,17 +2,17 @@ import importlib
 import threading
 import inspect
 import logging
-import time
 
 
 ##### Private objects #####
 _logger = logging.getLogger(__name__)
 
+_is_running = False
 _meters = {}
 _handlers = []
 _placeholders = {}
 
-#_watcher = _Watcher() # XXX: See bellow
+_control_lock = threading.Lock()
 
 
 ##### Public objects #####
@@ -20,25 +20,21 @@ prefix = ""
 
 
 ##### Public methods #####
-def add_meter(name, meter):
-    _meters[name] = meter
-    return meter
+def add_meter(name, obj):
+    _meters[name] = obj
+    return obj
 
 def get_meter(name):
     return _meters[name]
 
-def add_handler(handler):
-    assert hasattr(handler, "set_dumper")
-    assert hasattr(handler, "start")
-    assert hasattr(handler, "stop")
-    assert hasattr(handler, "is_alive")
-    handler.set_dumper(dump)
-    _handlers.append(handler)
-    return handler
+def add_handler(obj):
+    assert hasattr(obj, "start")
+    assert hasattr(obj, "stop")
+    _handlers.append(obj)
 
-def add_placeholder(name, placeholder):
-    _placeholders[name] = placeholder
-    return placeholder
+def add_placeholder(name, obj):
+    _placeholders[name] = obj
+    return obj
 
 
 ###
@@ -47,7 +43,7 @@ def configure(config):
     prefix = config.get("common", {}).get("prefix", prefix)
 
     for (name, attrs) in config.get("placeholders", {}).items():
-        add_placeholder(name, _init_object(attrs, False))
+        add_placeholder(name, _init_object(attrs, enable_kwargs=False))
 
     for attrs in config.get("handlers", {}).values():
         add_handler(_init_object(attrs))
@@ -55,49 +51,65 @@ def configure(config):
     for (name, attrs) in config.get("meters", {}).items():
         add_meter(name, _init_object(attrs))
 
+    if config.get("common", {}).get("auto-start", False):
+        start()
+
+def clear():
+    global _meters
+    global _handlers
+    global _placeholders
+    stop()
+    _meters = {}
+    _handlers = []
+    _placeholders = {}
+
 
 ###
-def start(auto_stop=True):
-    _logger.debug("Starting metrics thread; auto_stop=%s", auto_stop)
-    for handler in _handlers:
-        _logger.debug("Starting handler %s...", handler)
-        handler.start()
-    if auto_stop:
-        _watcher.start()
-    _logger.debug("All metrics were started")
+def start():
+    with _control_lock:
+        global _is_running
+        assert not _is_running, "Attempt to double start()"
+
+        _logger.debug("Starting metrics threads")
+        for handler in _handlers:
+            _logger.debug("Starting handler %s...", handler)
+            handler.start(dump)
+
+        _is_running = True
+        _logger.debug("All metrics were started")
 
 def stop():
-    _logger.debug("Perform a manual stop metrics...")
-    if _watcher.is_alive():
-        _watcher.stop()
-    else:
-        _inner_stop()
-    _logger.debug("All metrics were stopped")
+    with _control_lock:
+        global _is_running
+        assert _is_running, "Attempt to double stop()"
+
+        _logger.debug("Perform a manual stop metrics...")
+        for handler in _handlers:
+            _logger.debug("Stopping handler %s...", handler)
+            handler.stop()
+        _is_running = False
+
+        _logger.debug("All metrics were stopped")
 
 def dump():
-    # TODO: lazy placeholders
-    placeholders = { key: value() for (key, value) in _placeholders.items() }
-
-    results = {}
-    for (name, meter) in _meters.items():
-        try:
-            meter_value = meter()
-        except Exception:
-            _logger.warning("An exception occured while processing metric %s::%s", meter, name, exc_info=True)
-            meter_value = None
-        if isinstance(meter_value, dict): # For meters with multiple arrows (values)
-            for (arrow, value) in meter_value.items():
-                results[_format_metric_name((name, arrow), placeholders)] = value
-        else:
-            results[_format_metric_name(name, placeholders)] = meter_value
-    return results
-
-def is_running_hook():
-    # Usually, MainThread lives up to the completion of all the rest.
-    # We need to determine when it is completed and to stop sending and receiving messages.
-    # For our architecture that is enough.
-    return threading._shutdown.__self__.is_alive() # pylint: disable=W0212
-
+    try:
+        placeholders = _get_placeholders_cache()
+        results = {}
+        for (name, meter) in dict(_meters).items():
+            try:
+                meter_value = meter()
+            except Exception:
+                _logger.warning("An exception occured while processing metric %s::%s", meter, name, exc_info=True)
+                meter_value = None
+            if isinstance(meter_value, dict): # For meters with multiple arrows (values)
+                for (arrow, value) in meter_value.items():
+                    results[_format_metric_name((name, arrow), placeholders)] = value
+            else:
+                results[_format_metric_name(name, placeholders)] = meter_value
+        return results
+    except Exception:
+        _logger.exception("An exception occured while dumping metrics")
+        return {}
 
 ##### Private methods #####
 def _init_object(attrs, enable_kwargs=True):
@@ -128,37 +140,16 @@ def _init_object(attrs, enable_kwargs=True):
 
     return obj
 
+def _get_placeholders_cache():
+    # TODO: lazy placeholders
+    return {
+        key: ( value() if callable(value) else value )
+        for (key, value) in dict(_placeholders).items()
+    }
+
 def _format_metric_name(parts, placeholders):
     if not isinstance(parts, (list, tuple)):
         parts = (parts,)
     name =  ".".join(filter(None, (prefix,) + parts)) # Apply the global prefix
     return name.format(**placeholders)
-
-
-###
-def _inner_stop():
-    for handler in _handlers:
-        _logger.debug("Stopping handler %s...", handler)
-        handler.stop()
-
-
-##### Private classes #####
-class _Watcher(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self._stop_loop = False
-
-    def start(self):
-        self._stop_loop = False
-        threading.Thread.start(self)
-
-    def stop(self):
-        self._stop_loop = True
-
-    def run(self):
-        while not self._stop_loop and is_running_hook():
-            time.sleep(1)
-        _inner_stop()
-
-_watcher = _Watcher()
 

@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 
 ##### Public classes #####
 class GraphiteHandler(ThreadedHandler):
-    def __init__(self, url="tcp://localhost:2004", timeout=None, period=5):
+    def __init__(self, period=5, url="tcp://localhost:2004", timeout=None):
         ThreadedHandler.__init__(self, period)
 
         parsed_url = urllib.parse.urlparse(url)
@@ -40,7 +40,9 @@ class GraphiteHandler(ThreadedHandler):
 
     def shot(self, metrics):
         # TODO: Add queue for unsended metrics
-        threading.Thread(target=( lambda: self._send(metrics) ), daemon=True).start()
+        thread = threading.Thread(target=lambda: self._send(metrics))
+        thread.daemon = True
+        thread.start()
 
 
     ### Private ###

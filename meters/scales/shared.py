@@ -5,7 +5,7 @@ import multiprocessing
 class Value:
     def __init__(self, value_type=int, default=0):
         self._value_type=value_type
-        self._value = multiprocessing.Value({
+        self._value = multiprocessing.Value({ # pylint: disable=E1101
                 int:   "i",
                 float: "d",
             }[value_type], self._value_type(default))

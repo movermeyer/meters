@@ -2,9 +2,10 @@ language: python
 python:
   - "3.2"
   - "3.3"
+#  - "3.4"
 before_script:
   - pip install -r test_requirements.txt --use-mirrors
 script:
-  - py.test test.py --cov meters --cov-report term-missing #--pep8 meters
+  - py.test -v --cov meters --cov-report term-missing #--pep8 meters
 after_success:
   - coveralls --verbose
