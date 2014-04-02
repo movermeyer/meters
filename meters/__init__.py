@@ -2,7 +2,6 @@ import importlib
 import threading
 import inspect
 import logging
-import time
 
 
 ##### Private objects #####
@@ -13,7 +12,6 @@ _meters = {}
 _handlers = []
 _placeholders = {}
 
-_watcher = None
 _control_lock = threading.Lock()
 
 
@@ -32,7 +30,6 @@ def get_meter(name):
 def add_handler(obj):
     assert hasattr(obj, "start")
     assert hasattr(obj, "stop")
-    assert hasattr(obj, "is_alive")
     _handlers.append(obj)
 
 def add_placeholder(name, obj):
@@ -65,36 +62,30 @@ def clear():
 
 
 ###
-def start(watch=True):
+def start():
     with _control_lock:
         global _is_running
         assert not _is_running, "Attempt to double start()"
 
-        _logger.debug("Starting metrics threads; watch=%s", watch)
+        _logger.debug("Starting metrics threads")
         for handler in _handlers:
             _logger.debug("Starting handler %s...", handler)
             handler.start(dump)
-
-        if watch:
-            _logger.debug("Starting the watcher...")
-            global _watcher
-            _watcher = _Watcher(_get_main_thread(), _inner_stop)
-            _watcher.start()
-            _logger.debug("Watcher is started")
 
         _is_running = True
         _logger.debug("All metrics were started")
 
 def stop():
     with _control_lock:
+        global _is_running
         assert _is_running, "Attempt to double stop()"
+
         _logger.debug("Perform a manual stop metrics...")
-        if _watcher.is_alive():
-            _watcher.stop()
-            _logger.debug("Waiting for watcher...")
-            _watcher.join()
-        else:
-            _inner_stop()
+        for handler in _handlers:
+            _logger.debug("Stopping handler %s...", handler)
+            handler.stop()
+        _is_running = False
+
         _logger.debug("All metrics were stopped")
 
 def dump():
@@ -158,40 +149,4 @@ def _format_metric_name(parts, placeholders):
         parts = (parts,)
     name =  ".".join(filter(None, (prefix,) + parts)) # Apply the global prefix
     return name.format(**placeholders)
-
-
-###
-def _get_main_thread():
-    if hasattr(threading, "main_thread"): # Python >= 3.4
-        return threading.main_thread() # pylint: disable=E1101
-    else: # Dirty hack for Python <= 3.3
-        return threading._shutdown.__self__ # pylint: disable=W0212
-
-def _inner_stop():
-    # Locking is not required, as has already been done in the stop()
-    for handler in _handlers:
-        _logger.debug("Stopping handler %s...", handler)
-        handler.stop()
-    global _is_running
-    _is_running = False
-
-
-##### Private classes #####
-class _Watcher(threading.Thread):
-    def __init__(self, thread, action):
-        threading.Thread.__init__(self)
-        self._thread = thread
-        self._action = action
-        self._stop_thread = False
-
-    def stop(self):
-        self._stop_thread = True
-
-    def run(self):
-        # Usually, MainThread lives up to the completion of all the rest.
-        # We need to determine when it is completed and to stop sending and receiving messages.
-        # For our architecture that is enough.
-        while not self._stop_thread and self._thread.is_alive():
-            self._thread.join(timeout=0.1)
-        self._action()
 

@@ -12,6 +12,7 @@ class ThreadedHandler(metaclass=abc.ABCMeta): # pylint: disable=R0921
     def start(self, dumper):
         assert self._thread is None, "Attempt to double start()"
         self._thread = _HandlerThread(lambda: self.shot(dumper()), self._period)
+        self._thread.daemon = True
         self._thread.start()
 
     def stop(self):
@@ -19,9 +20,6 @@ class ThreadedHandler(metaclass=abc.ABCMeta): # pylint: disable=R0921
         self._thread.stop()
         self._thread.join()
         self._thread = None
-
-    def is_alive(self):
-        return ( self._thread is not None and self._thread.is_alive() )
 
     @abc.abstractmethod
     def shot(self, metrics):

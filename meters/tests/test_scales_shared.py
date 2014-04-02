@@ -62,7 +62,7 @@ class TestShared(unittest.TestCase): # pylint: disable=R0904
         def worker(value):
             for _ in range(abs(number)):
                 op(value, 1)
-        process = multiprocessing.Process(target=worker, args=(value,))
+        process = multiprocessing.Process(target=worker, args=(value,)) # pylint: disable=E1101
         process.start()
         process.join()
         self.assertEqual(value(), number)
