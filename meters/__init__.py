@@ -51,6 +51,9 @@ def configure(config):
     for (name, attrs) in config.get("meters", {}).items():
         add_meter(name, _init_object(attrs))
 
+    if config.get("common", {}).get("auto-start", False):
+        start()
+
 def clear():
     global _meters
     global _handlers
