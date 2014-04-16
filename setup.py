@@ -17,20 +17,20 @@ if __name__ == "__main__":
         description="Yet another metrics library",
         platforms="any",
 
-        packages=(
+        packages=[
             "meters",
             "meters/handlers",
             "meters/scales",
             "meters/tests",
-        ),
+        ],
 
-        classifiers=( # http://pypi.python.org/pypi?:action=list_classifiers
+        classifiers=[ # http://pypi.python.org/pypi?:action=list_classifiers
             "Development Status :: 2 - Pre-Alpha",
             "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
             "Operating System :: OS Independent",
             "Programming Language :: Python :: 3",
             "Topic :: Software Development :: Libraries :: Python Modules",
             "Topic :: System :: Networking :: Monitoring",
-        ),
+        ],
     )
 
