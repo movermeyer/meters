@@ -9,3 +9,10 @@ script:
   - py.test -v --cov meters --cov-report term-missing #--pep8 meters
 after_success:
   - coveralls --verbose
+deploy:
+  provider: pypi
+  user: mdevaev
+  password:
+    secure: b5AUhaEjApP4XAH0aODUwoc6+aNvEX4zhkGadIBqYsZq7XVHVrmAvqIhrAOTXrSAX0KjOWVflsaeWuWoS4Pp/ocabndTfzSWZaXpIEws4QdCP3f3ST/RXcvdlznA8TTH7gHt4fGveQAuhhxlYceVcFME1WPrAtPfhExReetujsw=
+  on:
+    tags: true
