@@ -13,7 +13,7 @@ deploy:
   provider: pypi
   user: mdevaev
   password:
-    secure: b5AUhaEjApP4XAH0aODUwoc6+aNvEX4zhkGadIBqYsZq7XVHVrmAvqIhrAOTXrSAX0KjOWVflsaeWuWoS4Pp/ocabndTfzSWZaXpIEws4QdCP3f3ST/RXcvdlznA8TTH7gHt4fGveQAuhhxlYceVcFME1WPrAtPfhExReetujsw=
+    secure: "UIeIc82q2DZPA1U2wQE5qt5kA5zqbanyEZdIxx32vnjitqctXHobYs5OmKuKG2ry7FUQjp+L0Mt8tMEVWuMyZqR1lBl0F1XDMONNg77cwrg9rYt7Am9w2bOOP077rBOvjTZh8IyDQd8BW2oI4CJ5+zY1ZK2sZUaVOWHBA/L0fUQ="
   on:
     python: "3.3"
     tags: true
