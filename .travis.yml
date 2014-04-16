@@ -15,4 +15,5 @@ deploy:
   password:
     secure: b5AUhaEjApP4XAH0aODUwoc6+aNvEX4zhkGadIBqYsZq7XVHVrmAvqIhrAOTXrSAX0KjOWVflsaeWuWoS4Pp/ocabndTfzSWZaXpIEws4QdCP3f3ST/RXcvdlznA8TTH7gHt4fGveQAuhhxlYceVcFME1WPrAtPfhExReetujsw=
   on:
+    python: "3.3"
     tags: true
