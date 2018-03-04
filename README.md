@@ -2,7 +2,7 @@ meters - Yet another metrics library
 ===========================
 [![Build Status](https://travis-ci.org/yandex-sysmon/meters.svg?branch=master)](https://travis-ci.org/yandex-sysmon/meters)
 [![Coverage Status](https://coveralls.io/repos/yandex-sysmon/meters/badge.png)](https://coveralls.io/r/yandex-sysmon/meters)
-[![Latest Version](https://pypip.in/v/meters/badge.png)](https://pypi.python.org/pypi/meters/)
+[![Latest Version](https://img.shields.io/pypi/v/meters.svg)](https://pypi.python.org/pypi/meters/)
 
 Tracks server state and statistics, allowing you to see what your server is
 doing. It can also send metrics to Graphite for graphing or to a file for crash forensics.
